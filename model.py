@@ -41,6 +41,8 @@ class Model():
         self.targets = tf.placeholder(
             tf.int32, [args.batch_size, args.seq_length])
         self.initial_state = cell.zero_state(args.batch_size, tf.float32)
+        # need global step for DISTRIBUTED system
+        self.global_step = tf.train.get_or_create_global_step()
 
         # softmax output layer, use softmax to classify
         with tf.variable_scope('rnnlm'):
@@ -91,8 +93,9 @@ class Model():
         with tf.name_scope('optimizer'):
             optimizer = tf.train.AdamOptimizer(self.lr)
 
-        # apply gradient change to the all the trainable variable.
-        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+        # apply gradient change to the all the trainable variable. 
+        # Also provide the global variable, necessary for distributed 
+        self.train_op = optimizer.apply_gradients(zip(grads, tvars), global_step=self.global_step)
 
         # instrument tensorboard
         tf.summary.histogram('logits', self.logits)

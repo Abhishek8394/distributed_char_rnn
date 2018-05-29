@@ -1,0 +1,3 @@
+start cmd /k  "venv\Scripts\activate.bat && python train.py --distributed --ps_hosts 127.0.0.1:8000 --worker_hosts 127.0.0.1:9000,127.0.0.1:9001 --job_name ps --task_index 0 --save_dir distib-train"
+start cmd /k  "venv\Scripts\activate.bat && python train.py --distributed --ps_hosts 127.0.0.1:8000 --worker_hosts 127.0.0.1:9000,127.0.0.1:9001 --job_name worker --task_index 0 --save_dir distib-train"
+start cmd /k  "venv\Scripts\activate.bat && python train.py --distributed --ps_hosts 127.0.0.1:8000 --worker_hosts 127.0.0.1:9000,127.0.0.1:9001 --job_name worker --task_index 1 --save_dir distib-train"
