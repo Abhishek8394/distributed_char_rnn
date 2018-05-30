@@ -10,7 +10,14 @@ Based on the original code from [https://github.com/sherjilozair/char-rnn-tensor
 
 #### 1. For launching a distributed training environment
 
-You need to launch each node as a different process. The command for launching any node is 
+**Step 1:** First make sure sure your data is sharde if you want data parallel training. For creating that run the following command:
+
+```bash
+# Call with -h option for more help
+python data_splitter.py --data_dir data/tinyshakespeare --num_parts 2 --out_dir sharded_data
+```
+
+**Step 2:** You need to launch each node as a different process. The command for launching any node is 
 
 ```bash
  python train.py --distributed --ps_hosts 127.0.0.1:8000 --worker_hosts 127.0.0.1:9000,127.0.0.1:9001 --job_name $job_name --task_index $task_index --save_dir distrib-train
