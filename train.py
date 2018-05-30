@@ -66,12 +66,23 @@ parser.add_argument('--ps_hosts', help="PS HOSTS", default=None)
 parser.add_argument('--worker_hosts', help="WORKER HOSTS", default=None)
 parser.add_argument('--job_name', help="Job name. Must be ps/worker", choices=['ps', 'worker'], default=None)
 parser.add_argument('--task_index', help="Index of task for given job", type=int, default=None)
+parser.add_argument("--tensor_file", help="Tensor file of the specific training data for given node.", default=None)
 
 args = parser.parse_args()
 
 def train(args):
-    data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length)
-    args.vocab_size = data_loader.vocab_size
+    if args.distributed:
+        # PS nodes need not load data and take up ram.
+        if args.job_name == "worker":
+            # raise exception because having each node load a file and split it is 
+            # wasteful. Instead make it a preprocessing step and have the data split beforehand.
+            if args.tensor_file is None:
+                raise Exception("Tensor file must be provided.")
+            data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length, tensor_file=args.tensor_file)
+            args.vocab_size = data_loader.vocab_size
+    else:
+        data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length)
+        args.vocab_size = data_loader.vocab_size
 
     # check compatibility if training is continued from previously saved model
     if args.init_from is not None:
@@ -95,12 +106,13 @@ def train(args):
         assert saved_chars==data_loader.chars, "Data and loaded model disagree on character set!"
         assert saved_vocab==data_loader.vocab, "Data and loaded model disagree on dictionary mappings!"
 
-    if not os.path.isdir(args.save_dir):
-        os.makedirs(args.save_dir)
-    with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
-        cPickle.dump(args, f)
-    with open(os.path.join(args.save_dir, 'chars_vocab.pkl'), 'wb') as f:
-        cPickle.dump((data_loader.chars, data_loader.vocab), f)
+    if not args.distributed or args.job_name == "worker":
+        if not os.path.isdir(args.save_dir):
+            os.makedirs(args.save_dir)
+        with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
+            cPickle.dump(args, f)
+        with open(os.path.join(args.save_dir, 'chars_vocab.pkl'), 'wb') as f:
+            cPickle.dump((data_loader.chars, data_loader.vocab), f)
 
     if args.distributed:
         # get the list of ps and worker hosts
