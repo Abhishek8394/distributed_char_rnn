@@ -16,7 +16,7 @@ Based on the original code from [https://github.com/sherjilozair/char-rnn-tensor
 # Call with -h option for more help
 python data_splitter.py --data_dir data/tinyshakespeare --num_parts 2 --out_dir sharded_data
 ```
-This will create *data-<num>.npy* files in the `out_dir`. `num` is the number of partition. Note that vocabulary is not partitioned since it should be shared across all nodes and must be same globally. If vocab creation is left to runtime, it will differ for each partition.
+This will create *data-\<num\>.npy* files in the `out_dir`. `num` is the number of partition. Note that vocabulary is not partitioned since it should be shared across all nodes and must be same globally. If vocab creation is left to runtime, it will differ for each partition.
 
 **Step 2:** You need to launch each node as a different process. The command for launching any node is 
 
